@@ -17,7 +17,7 @@
       </ion-item-option>
     </ion-item-options>
 
-    <ion-item>
+    <ion-item button @click="emitAction('detail')" detail>
       <ion-icon :icon="typeIcon" slot="start" color="primary"></ion-icon>
       <ion-label>
         <h2>{{ barcode.displayValue }}</h2>
@@ -58,7 +58,7 @@ const props = defineProps({
   }
 })
 
-const emit = defineEmits(['share', 'copy', 'open', 'delete'])
+const emit = defineEmits(['share', 'copy', 'open', 'delete', 'detail'])
 
 const slidingItem = ref(null)
 

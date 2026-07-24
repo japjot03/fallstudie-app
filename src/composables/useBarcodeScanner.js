@@ -3,6 +3,7 @@ import { cameraOutline, imageOutline, closeOutline } from 'ionicons/icons'
 import * as scannerService from '@/services/scanner.service'
 import { PermissionStatus } from '@/services/scanner.service'
 import { pickImageFromGallery } from '@/services/image-picker.service'
+import { vibrateOnScan } from '@/services/haptics.service'
 import { useBarcodeStore } from '@/composables/useBarcodeStore'
 import { useToast } from '@/composables/useToast'
 
@@ -58,6 +59,7 @@ export function useBarcodeScanner() {
       const scanned = await scannerService.scanWithCamera()
       if (scanned.length > 0) {
         await addScannedBarcodes(scanned)
+        await vibrateOnScan()
       }
     } catch (error) {
       console.error('Fehler beim Scannen:', error)
@@ -83,6 +85,7 @@ export function useBarcodeScanner() {
       }
 
       await addScannedBarcodes(scanned)
+      await vibrateOnScan()
     } catch (error) {
       // Abbruch durch den Nutzer ist kein Fehlerfall.
       if (scannerService.isCancellationError(error)) return
@@ -120,3 +123,4 @@ export function useBarcodeScanner() {
     scanFromGallery
   }
 }
+
