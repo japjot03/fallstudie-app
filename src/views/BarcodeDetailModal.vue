@@ -12,9 +12,15 @@
     </ion-header>
 
     <ion-content class="ion-padding">
-      <!-- Icon und Wert -->
+      <!-- QR-Code-Bild zum Scannen -->
       <div class="detail-header">
-        <ion-icon :icon="typeIcon" class="detail-icon" color="primary"></ion-icon>
+        <img
+          v-if="qrImageUrl"
+          :src="qrImageUrl"
+          alt="QR-Code"
+          class="barcode-image"
+        />
+        <ion-spinner v-else name="dots" class="qr-spinner"></ion-spinner>
         <h1 class="detail-value">{{ barcode.displayValue }}</h1>
       </div>
 
@@ -154,12 +160,12 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonButtons, IonButton, IonIcon, IonList, IonListHeader,
-  IonItem, IonLabel, IonBadge,
-  modalController
+  IonItem, IonLabel, IonBadge, IonSpinner,
+  modalController, toastController
 } from '@ionic/vue'
 import {
   closeOutline, shareSocialOutline, copyOutline,
@@ -169,6 +175,8 @@ import { Browser } from '@capacitor/browser'
 import { isOpenable } from '@/utils/barcode.mapper'
 import { resolveIconForValueType } from '@/utils/icon.resolver'
 import { formatDateTime } from '@/utils/date.formatter'
+import { generateQrDataUrl } from '@/services/qrcode.service'
+import { copyToClipboard } from '@/services/sharing.service'
 import { useBarcodeActions } from '@/composables/useBarcodeActions'
 
 const props = defineProps({
@@ -180,9 +188,18 @@ const props = defineProps({
 
 const { share, copy, open, confirmDelete } = useBarcodeActions()
 
+const qrImageUrl = ref('')
 const canBeOpened = computed(() => isOpenable(props.barcode.valueType))
 const typeIcon = computed(() => resolveIconForValueType(props.barcode.valueType))
 const scannedAtLabel = computed(() => formatDateTime(props.barcode.scannedAt))
+
+onMounted(async () => {
+  try {
+    qrImageUrl.value = await generateQrDataUrl(props.barcode.displayValue)
+  } catch (error) {
+    console.error('Fehler bei QR-Code-Generierung:', error)
+  }
+})
 
 /**
  * Schließt das Modal.
@@ -209,10 +226,8 @@ async function copyBarcode() {
  * Kopiert das WIFI-Passwort.
  */
 async function copyWifiPassword() {
-  const { copyToClipboard } = await import('@/services/sharing.service')
   await copyToClipboard(props.barcode.wifi.password)
 
-  const { toastController } = await import('@ionic/vue')
   const toast = await toastController.create({
     message: 'Passwort in die Zwischenablage kopiert!',
     duration: 2000,
@@ -242,7 +257,6 @@ async function openMap() {
  */
 async function deleteBarcode() {
   await confirmDelete(props.barcode)
-  // Modal schließen, da der Barcode nach Bestätigung nicht mehr existiert.
   modalController.dismiss()
 }
 </script>
@@ -256,9 +270,19 @@ async function deleteBarcode() {
   text-align: center;
 }
 
-.detail-icon {
-  font-size: 48px;
-  margin-bottom: 0.75rem;
+.barcode-image {
+  width: 200px;
+  height: 200px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  margin-bottom: 1rem;
+  background: #ffffff;
+}
+
+.qr-spinner {
+  width: 200px;
+  height: 200px;
+  margin-bottom: 1rem;
 }
 
 .detail-value {
