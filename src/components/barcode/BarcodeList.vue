@@ -8,6 +8,7 @@
       @copy="$emit('copy', $event)"
       @open="$emit('open', $event)"
       @delete="$emit('delete', $event)"
+      @detail="$emit('detail', $event)"
     />
   </ion-list>
 </template>
@@ -23,5 +24,5 @@ defineProps({
   }
 })
 
-defineEmits(['share', 'copy', 'open', 'delete'])
+defineEmits(['share', 'copy', 'open', 'delete', 'detail'])
 </script>

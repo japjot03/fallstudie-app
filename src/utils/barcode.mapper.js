@@ -40,14 +40,17 @@ export function createBarcodeId() {
 /**
  * Wandelt ein rohes MLKit-Scanergebnis in unser internes Barcode-Modell um.
  * @param {object} scanned
- * @returns {{id: string, displayValue: string, format: string, valueType: string, scannedAt: string}}
+ * @returns {object}
  */
 export function toBarcodeEntry(scanned) {
   return {
     id: createBarcodeId(),
     displayValue: scanned.displayValue || scanned.rawValue || '',
+    rawValue: scanned.rawValue || '',
     format: mapFormat(scanned.format),
     valueType: mapValueType(scanned.valueType),
+    wifi: scanned.wifi || null,
+    geoPoint: scanned.geoPoint || null,
     scannedAt: new Date().toISOString()
   }
 }
@@ -62,8 +65,11 @@ export function normalizeBarcodeEntry(entry) {
   return {
     id: entry.id || createBarcodeId(),
     displayValue: entry.displayValue || '',
+    rawValue: entry.rawValue || '',
     format: entry.format || DEFAULT_FORMAT,
     valueType: entry.valueType || DEFAULT_VALUE_TYPE,
+    wifi: entry.wifi || null,
+    geoPoint: entry.geoPoint || null,
     scannedAt: entry.scannedAt || null
   }
 }

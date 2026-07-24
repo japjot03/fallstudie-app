@@ -30,6 +30,7 @@
         @copy="copy"
         @open="open"
         @delete="confirmDelete"
+        @detail="openBarcodeDetail"
       />
 
       <ion-fab vertical="bottom" horizontal="end" slot="fixed">
@@ -52,6 +53,7 @@ import { scanOutline, downloadOutline, qrCodeOutline } from 'ionicons/icons'
 import EmptyBarcodeState from '@/components/barcode/EmptyBarcodeState.vue'
 import BarcodeList from '@/components/barcode/BarcodeList.vue'
 import QrGeneratorModal from '@/views/QrGeneratorModal.vue'
+import BarcodeDetailModal from '@/views/BarcodeDetailModal.vue'
 import { useBarcodeStore } from '@/composables/useBarcodeStore'
 import { useBarcodeScanner } from '@/composables/useBarcodeScanner'
 import { useBarcodeActions } from '@/composables/useBarcodeActions'
@@ -73,5 +75,19 @@ async function openQrGenerator() {
   await modal.present()
 }
 
+/**
+ * Öffnet die Detailansicht für einen Barcode als Modal.
+ * @param {object} barcode
+ */
+async function openBarcodeDetail(barcode) {
+  const modal = await modalController.create({
+    component: BarcodeDetailModal,
+    componentProps: { barcode }
+  })
+
+  await modal.present()
+}
+
 onMounted(initialize)
 </script>
+

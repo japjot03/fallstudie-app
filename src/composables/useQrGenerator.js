@@ -4,7 +4,9 @@ import {
   saveQrCode,
   shareQrCode
 } from '@/services/qrcode.service'
+import { useBarcodeStore } from '@/composables/useBarcodeStore'
 import { useToast } from '@/composables/useToast'
+import { createBarcodeId } from '@/utils/barcode.mapper'
 
 /** Wartezeit, bevor bei Eingabe neu generiert wird. */
 const DEBOUNCE_MS = 300
@@ -13,6 +15,7 @@ const DEBOUNCE_MS = 300
  * Zustand und Aktionen des QR-Code-Generators.
  */
 export function useQrGenerator() {
+  const { addBarcodeEntry } = useBarcodeStore()
   const { showToast } = useToast()
 
   const inputText = ref('')
@@ -44,7 +47,8 @@ export function useQrGenerator() {
   }
 
   /**
-   * Speichert den QR-Code im Dokumente-Verzeichnis.
+   * Speichert den QR-Code im Dokumente-Verzeichnis und fügt ihn
+   * der Barcode-Liste hinzu.
    * @returns {Promise<void>}
    */
   async function save() {
@@ -52,7 +56,8 @@ export function useQrGenerator() {
 
     try {
       await saveQrCode(qrDataUrl.value)
-      await showToast('QR-Code wurde gespeichert!')
+      await addToList()
+      await showToast('QR-Code wurde gespeichert und zur Liste hinzugefügt!')
     } catch (error) {
       console.error('Fehler beim Speichern:', error)
       await showToast('Fehler beim Speichern des QR-Codes.')
@@ -74,6 +79,25 @@ export function useQrGenerator() {
     }
   }
 
+  /**
+   * Fügt den generierten QR-Code als Eintrag zur Barcode-Liste hinzu.
+   * @returns {Promise<void>}
+   */
+  async function addToList() {
+    const entry = {
+      id: createBarcodeId(),
+      displayValue: inputText.value.trim(),
+      rawValue: inputText.value.trim(),
+      format: 'QR_CODE',
+      valueType: detectValueType(inputText.value.trim()),
+      wifi: null,
+      geoPoint: null,
+      scannedAt: new Date().toISOString()
+    }
+
+    await addBarcodeEntry(entry)
+  }
+
   onUnmounted(() => clearTimeout(debounceTimer))
 
   return {
@@ -83,4 +107,25 @@ export function useQrGenerator() {
     save,
     share
   }
+}
+
+/**
+ * Erkennt den Werttyp anhand des Textinhalts.
+ * @param {string} text
+ * @returns {string}
+ */
+function detectValueType(text) {
+  if (!text) return 'TEXT'
+
+  try {
+    const url = new URL(text)
+    if (url.protocol === 'http:' || url.protocol === 'https:') return 'URL'
+  } catch {
+    // Kein gültiger URL.
+  }
+
+  if (/^[\d+\-() ]+$/.test(text) && text.replace(/\D/g, '').length >= 5) return 'PHONE'
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text)) return 'EMAIL'
+
+  return 'TEXT'
 }
