@@ -1,126 +1,60 @@
 import { alertController, actionSheetController } from '@ionic/vue'
 import { cameraOutline, imageOutline, closeOutline } from 'ionicons/icons'
-import * as scannerService from '@/services/scanner.service'
-import { PermissionStatus } from '@/services/scanner.service'
+import * as scanner from '@/services/scanner.service'
 import { pickImageFromGallery } from '@/services/image-picker.service'
 import { vibrateOnScan } from '@/services/haptics.service'
 import { useBarcodeStore } from '@/composables/useBarcodeStore'
 import { useToast } from '@/composables/useToast'
 
-/**
- * Ablauf des Scannens: Berechtigung prüfen, scannen, Ergebnis speichern
- * und den Nutzer über Fehler informieren.
- */
-export function useBarcodeScanner() {
+export const useBarcodeScanner = () => {
   const { addScannedBarcodes } = useBarcodeStore()
   const { showToast } = useToast()
 
-  /**
-   * Zeigt die Auswahl zwischen Kamera und Galerie.
-   * @returns {Promise<void>}
-   */
-  async function presentScanOptions() {
-    const actionSheet = await actionSheetController.create({
-      header: 'Barcode scannen',
-      buttons: [
-        {
-          text: 'Mit Kamera scannen',
-          icon: cameraOutline,
-          handler: () => scanWithCamera()
-        },
-        {
-          text: 'Aus Galerie wählen',
-          icon: imageOutline,
-          handler: () => scanFromGallery()
-        },
-        {
-          text: 'Abbrechen',
-          icon: closeOutline,
-          role: 'cancel'
-        }
-      ]
-    })
-
-    await actionSheet.present()
+  const handleScanResult = async (scanned) => {
+    if (!scanned?.length) return await showToast('Kein Barcode erkannt.')
+    await addScannedBarcodes(scanned)
+    await vibrateOnScan()
   }
 
-  /**
-   * Startet den Kamera-Scan, sofern die Berechtigung vorliegt.
-   * @returns {Promise<void>}
-   */
-  async function scanWithCamera() {
-    const permission = await scannerService.ensureCameraPermission()
-    if (permission !== PermissionStatus.GRANTED) {
-      await presentPermissionDeniedAlert()
-      return
+  const scanWithCamera = async () => {
+    const perm = await scanner.ensureCameraPermission()
+    if (perm !== scanner.PermissionStatus.GRANTED) {
+      const alert = await alertController.create({
+        header: 'Berechtigung fehlt',
+        message: 'Kamera-Berechtigung in den Einstellungen erlauben.',
+        buttons: [
+          { text: 'Abbrechen', role: 'cancel' },
+          { text: 'Einstellungen', handler: scanner.openAppSettings }
+        ]
+      })
+      return await alert.present()
     }
+    try { await handleScanResult(await scanner.scanWithCamera()) }
+    catch (e) { await showToast('Fehler beim Scannen.') }
+  }
 
+  const scanFromGallery = async () => {
     try {
-      const scanned = await scannerService.scanWithCamera()
-      if (scanned.length > 0) {
-        await addScannedBarcodes(scanned)
-        await vibrateOnScan()
-      }
-    } catch (error) {
-      console.error('Fehler beim Scannen:', error)
-      await showToast('Fehler beim Scannen des Barcodes.')
+      const src = await pickImageFromGallery()
+      if (src) await handleScanResult(await scanner.scanFromImage(src))
+    } catch (e) {
+      if (!scanner.isCancellationError(e)) await showToast('Fehler beim Lesen des Bildes.')
     }
-  }
-
-  /**
-   * Lässt den Nutzer ein Bild aus der Galerie wählen und liest die darin
-   * enthaltenen Barcodes.
-   * @returns {Promise<void>}
-   */
-  async function scanFromGallery() {
-    try {
-      const imageSource = await pickImageFromGallery()
-      // Kein Bild gewählt – der Nutzer hat den Picker geschlossen.
-      if (!imageSource) return
-
-      const scanned = await scannerService.scanFromImage(imageSource)
-      if (scanned.length === 0) {
-        await showToast('Kein Barcode im ausgewählten Bild erkannt.')
-        return
-      }
-
-      await addScannedBarcodes(scanned)
-      await vibrateOnScan()
-    } catch (error) {
-      // Abbruch durch den Nutzer ist kein Fehlerfall.
-      if (scannerService.isCancellationError(error)) return
-
-      console.error('Fehler beim Lesen des Bildes:', error)
-      await showToast('Kein Barcode im ausgewählten Bild erkannt.')
-    }
-  }
-
-  /**
-   * Weist auf die fehlende Kamera-Berechtigung hin und bietet die
-   * App-Einstellungen an.
-   * @returns {Promise<void>}
-   */
-  async function presentPermissionDeniedAlert() {
-    const alert = await alertController.create({
-      header: 'Kamera-Berechtigung benötigt',
-      message:
-        'Die Kamera-Berechtigung wurde verweigert. Bitte erlaube den Kamera-Zugriff in den App-Einstellungen, um Barcodes scannen zu können.',
-      buttons: [
-        { text: 'Abbrechen', role: 'cancel' },
-        {
-          text: 'Einstellungen öffnen',
-          handler: () => scannerService.openAppSettings()
-        }
-      ]
-    })
-
-    await alert.present()
   }
 
   return {
-    presentScanOptions,
     scanWithCamera,
-    scanFromGallery
+    scanFromGallery,
+    presentScanOptions: async () => {
+      const sheet = await actionSheetController.create({
+        header: 'Barcode scannen',
+        buttons: [
+          { text: 'Kamera', icon: cameraOutline, handler: scanWithCamera },
+          { text: 'Galerie', icon: imageOutline, handler: scanFromGallery },
+          { text: 'Abbrechen', icon: closeOutline, role: 'cancel' }
+        ]
+      })
+      await sheet.present()
+    }
   }
 }
-

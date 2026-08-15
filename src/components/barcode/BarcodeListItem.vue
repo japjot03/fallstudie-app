@@ -51,38 +51,18 @@ import { isOpenable } from '@/utils/barcode.mapper'
 import { resolveIconForValueType } from '@/utils/icon.resolver'
 import { formatDateTime } from '@/utils/date.formatter'
 
-const props = defineProps({
-  barcode: {
-    type: Object,
-    required: true
-  }
-})
-
+const props = defineProps({ barcode: { type: Object, required: true } })
 const emit = defineEmits(['share', 'copy', 'open', 'delete', 'detail'])
-
 const slidingItem = ref(null)
 
 const canBeOpened = computed(() => isOpenable(props.barcode.valueType))
 const typeIcon = computed(() => resolveIconForValueType(props.barcode.valueType))
 const scannedAtLabel = computed(() => formatDateTime(props.barcode.scannedAt))
 
-/**
- * Schließt das aufgeklappte Item und meldet die Aktion nach oben.
- * @param {'share'|'copy'|'open'|'delete'} action
- */
-async function emitAction(action) {
-  await closeSliding()
+const emitAction = async (action) => {
+  const el = slidingItem.value?.$el ?? slidingItem.value
+  if (el?.close) await el.close()
   emit(action, props.barcode)
-}
-
-/**
- * Klappt das Sliding-Item wieder zu.
- */
-async function closeSliding() {
-  const element = slidingItem.value?.$el ?? slidingItem.value
-  if (element?.close) {
-    await element.close()
-  }
 }
 </script>
 

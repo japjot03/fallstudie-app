@@ -1,84 +1,27 @@
-import {
-  VALUE_TYPE_MAP,
-  DEFAULT_VALUE_TYPE,
-  FORMAT_MAP,
-  DEFAULT_FORMAT,
-  OPENABLE_VALUE_TYPES
-} from '@/constants/barcode.constants'
+import { VALUE_TYPE_MAP, DEFAULT_VALUE_TYPE, FORMAT_MAP, DEFAULT_FORMAT, OPENABLE_VALUE_TYPES } from '@/constants/barcode.constants'
 
-/**
- * Übersetzt den rohen valueType von MLKit in einen sprechenden Bezeichner.
- * @param {number|string} rawType
- * @returns {string}
- */
-export function mapValueType(rawType) {
-  if (typeof rawType === 'string') return rawType
-  return VALUE_TYPE_MAP[rawType] || DEFAULT_VALUE_TYPE
-}
+export const mapValueType = (t) => typeof t === 'string' ? t : VALUE_TYPE_MAP[t] || DEFAULT_VALUE_TYPE
+export const mapFormat = (f) => typeof f === 'string' ? f : FORMAT_MAP[f] || DEFAULT_FORMAT
+export const createBarcodeId = () => typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
 
-/**
- * Übersetzt den rohen Formatcode von MLKit in einen sprechenden Bezeichner.
- * @param {number|string} rawFormat
- * @returns {string}
- */
-export function mapFormat(rawFormat) {
-  if (typeof rawFormat === 'string') return rawFormat
-  return FORMAT_MAP[rawFormat] || DEFAULT_FORMAT
-}
+export const toBarcodeEntry = (scanned) => ({
+  id: createBarcodeId(),
+  displayValue: scanned.displayValue || scanned.rawValue || '',
+  rawValue: scanned.rawValue || '',
+  format: mapFormat(scanned.format),
+  valueType: mapValueType(scanned.valueType),
+  wifi: scanned.wifi || null,
+  geoPoint: scanned.geoPoint || null,
+  scannedAt: new Date().toISOString()
+})
 
-/**
- * Erzeugt eine eindeutige ID für einen Barcode-Eintrag.
- * @returns {string}
- */
-export function createBarcodeId() {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID()
-  }
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`
-}
+export const normalizeBarcodeEntry = (entry) => ({
+  ...entry,
+  id: entry.id || createBarcodeId(),
+  displayValue: entry.displayValue || '',
+  rawValue: entry.rawValue || '',
+  format: entry.format || DEFAULT_FORMAT,
+  valueType: entry.valueType || DEFAULT_VALUE_TYPE
+})
 
-/**
- * Wandelt ein rohes MLKit-Scanergebnis in unser internes Barcode-Modell um.
- * @param {object} scanned
- * @returns {object}
- */
-export function toBarcodeEntry(scanned) {
-  return {
-    id: createBarcodeId(),
-    displayValue: scanned.displayValue || scanned.rawValue || '',
-    rawValue: scanned.rawValue || '',
-    format: mapFormat(scanned.format),
-    valueType: mapValueType(scanned.valueType),
-    wifi: scanned.wifi || null,
-    geoPoint: scanned.geoPoint || null,
-    scannedAt: new Date().toISOString()
-  }
-}
-
-/**
- * Normalisiert einen persistierten Eintrag. Frühere App-Versionen haben ohne
- * ID gespeichert – die wird hier nachgezogen, damit Listen stabil bleiben.
- * @param {object} entry
- * @returns {object}
- */
-export function normalizeBarcodeEntry(entry) {
-  return {
-    id: entry.id || createBarcodeId(),
-    displayValue: entry.displayValue || '',
-    rawValue: entry.rawValue || '',
-    format: entry.format || DEFAULT_FORMAT,
-    valueType: entry.valueType || DEFAULT_VALUE_TYPE,
-    wifi: entry.wifi || null,
-    geoPoint: entry.geoPoint || null,
-    scannedAt: entry.scannedAt || null
-  }
-}
-
-/**
- * Prüft, ob ein Barcode-Typ per "Öffnen"-Aktion behandelt werden kann.
- * @param {string} valueType
- * @returns {boolean}
- */
-export function isOpenable(valueType) {
-  return OPENABLE_VALUE_TYPES.includes(valueType)
-}
+export const isOpenable = (type) => OPENABLE_VALUE_TYPES.includes(type)
