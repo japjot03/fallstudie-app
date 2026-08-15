@@ -53,16 +53,11 @@ const { barcodes, isEmpty, initialize } = useBarcodeStore()
 const { presentScanOptions } = useBarcodeScanner()
 const { share, copy, open, confirmDelete } = useBarcodeActions()
 
-/**
- * Öffnet die Detailansicht für einen Barcode als Modal.
- * @param {object} barcode
- */
 async function openBarcodeDetail(barcode) {
   const modal = await modalController.create({
     component: BarcodeDetailModal,
     componentProps: { barcode }
   })
-
   await modal.present()
 }
 

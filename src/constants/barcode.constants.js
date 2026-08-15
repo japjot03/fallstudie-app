@@ -1,15 +1,5 @@
-/**
- * Zentrale Konstanten rund um Barcodes.
- * Enthält bewusst keine Logik, damit sie überall importierbar sind.
- */
-
-/** Schlüssel, unter dem die Scan-Historie in den Capacitor Preferences liegt. */
 export const STORAGE_KEY = 'scanned_barcodes'
 
-/**
- * MLKit liefert valueType je nach Plattform numerisch oder als String.
- * Diese Map übersetzt die numerischen Werte in sprechende Bezeichner.
- */
 export const VALUE_TYPE_MAP = {
   1: 'CONTACT_INFO',
   2: 'EMAIL',
@@ -25,10 +15,8 @@ export const VALUE_TYPE_MAP = {
   12: 'DRIVER_LICENSE'
 }
 
-/** Fallback, wenn der valueType unbekannt ist. */
 export const DEFAULT_VALUE_TYPE = 'TEXT'
 
-/** MLKit-Formatcodes auf lesbare Namen gemappt. */
 export const FORMAT_MAP = {
   0: 'UNKNOWN',
   1: 'CODE_128',
@@ -46,8 +34,6 @@ export const FORMAT_MAP = {
   4096: 'AZTEC'
 }
 
-/** Fallback, wenn das Format unbekannt ist. */
 export const DEFAULT_FORMAT = 'UNKNOWN'
 
-/** Value-Types, für die eine "Öffnen"-Aktion sinnvoll ist. */
 export const OPENABLE_VALUE_TYPES = ['URL', 'PHONE', 'EMAIL', 'SMS', 'GEO']

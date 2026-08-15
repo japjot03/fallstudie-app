@@ -165,73 +165,29 @@ import { formatDateTime } from '@/utils/date.formatter'
 import { copyToClipboard } from '@/services/sharing.service'
 import { useBarcodeActions } from '@/composables/useBarcodeActions'
 
-const props = defineProps({
-  barcode: {
-    type: Object,
-    required: true
-  }
-})
-
+const props = defineProps({ barcode: { type: Object, required: true } })
 const { share, copy, open, confirmDelete } = useBarcodeActions()
 
 const canBeOpened = computed(() => isOpenable(props.barcode.valueType))
 const scannedAtLabel = computed(() => formatDateTime(props.barcode.scannedAt))
 
-/**
- * Schließt das Modal.
- */
-function dismiss() {
-  modalController.dismiss()
-}
+const dismiss = () => modalController.dismiss()
+const shareBarcode = async () => share(props.barcode)
+const copyBarcode = async () => copy(props.barcode)
+const openBarcodeAction = async () => open(props.barcode)
 
-/**
- * Teilt den Barcode.
- */
-async function shareBarcode() {
-  await share(props.barcode)
-}
-
-/**
- * Kopiert den Barcode-Wert.
- */
-async function copyBarcode() {
-  await copy(props.barcode)
-}
-
-/**
- * Kopiert das WIFI-Passwort.
- */
-async function copyWifiPassword() {
+const copyWifiPassword = async () => {
   await copyToClipboard(props.barcode.wifi.password)
-
-  const toast = await toastController.create({
-    message: 'Passwort in die Zwischenablage kopiert!',
-    duration: 2000,
-    position: 'bottom'
-  })
+  const toast = await toastController.create({ message: 'Passwort in die Zwischenablage kopiert!', duration: 2000, position: 'bottom' })
   await toast.present()
 }
 
-/**
- * Öffnet den Barcode in der passenden App.
- */
-async function openBarcodeAction() {
-  await open(props.barcode)
-}
-
-/**
- * Öffnet die Koordinaten auf Google Maps im In-App-Browser.
- */
-async function openMap() {
+const openMap = async () => {
   const { lat, lng } = props.barcode.geoPoint
-  const url = `http://maps.google.com/?q=${lat},${lng}`
-  await Browser.open({ url })
+  await Browser.open({ url: `http://maps.google.com/?q=${lat},${lng}` })
 }
 
-/**
- * Löscht den Barcode und schließt das Modal.
- */
-async function deleteBarcode() {
+const deleteBarcode = async () => {
   await confirmDelete(props.barcode)
   modalController.dismiss()
 }
