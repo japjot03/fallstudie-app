@@ -3,11 +3,6 @@ import { STORAGE_KEY } from '@/constants/barcode.constants'
 import { normalizeBarcodeEntry } from '@/utils/barcode.mapper'
 
 /**
- * Persistenz der Scan-Historie über die Capacitor Preferences.
- * Kapselt Serialisierung und Normalisierung der Altdaten.
- */
-
-/**
  * Lädt alle gespeicherten Barcodes.
  * @returns {Promise<object[]>} Leeres Array, wenn nichts gespeichert ist.
  * @throws {Error} Wenn die gespeicherten Daten nicht lesbar sind.

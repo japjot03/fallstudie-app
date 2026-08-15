@@ -42,17 +42,6 @@ export function useBarcodeStore() {
   }
 
   /**
-   * Fügt einen bereits formatierten Barcode-Eintrag am Anfang der Liste ein.
-   * Wird z.B. vom QR-Code-Generator genutzt.
-   * @param {object} entry Fertig formatierter Eintrag mit id, displayValue, format, valueType, scannedAt
-   * @returns {Promise<void>}
-   */
-  async function addBarcodeEntry(entry) {
-    barcodes.value.unshift(entry)
-    await persist()
-  }
-
-  /**
    * Entfernt einen Eintrag anhand seiner ID.
    * @param {string} id
    * @returns {Promise<void>}
@@ -79,8 +68,8 @@ export function useBarcodeStore() {
     isEmpty: computed(() => barcodes.value.length === 0),
     initialize,
     addScannedBarcodes,
-    addBarcodeEntry,
     removeBarcode
   }
 }
+
 

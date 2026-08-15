@@ -12,18 +12,6 @@
     </ion-header>
 
     <ion-content class="ion-padding">
-      <!-- QR-Code-Bild zum Scannen -->
-      <div class="detail-header">
-        <img
-          v-if="qrImageUrl"
-          :src="qrImageUrl"
-          alt="QR-Code"
-          class="barcode-image"
-        />
-        <ion-spinner v-else name="dots" class="qr-spinner"></ion-spinner>
-        <h1 class="detail-value">{{ barcode.displayValue }}</h1>
-      </div>
-
       <!-- Eigenschaften -->
       <ion-list inset>
         <ion-item>
@@ -160,11 +148,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { computed } from 'vue'
 import {
   IonPage, IonHeader, IonToolbar, IonTitle, IonContent,
   IonButtons, IonButton, IonIcon, IonList, IonListHeader,
-  IonItem, IonLabel, IonBadge, IonSpinner,
+  IonItem, IonLabel, IonBadge,
   modalController, toastController
 } from '@ionic/vue'
 import {
@@ -173,9 +161,7 @@ import {
 } from 'ionicons/icons'
 import { Browser } from '@capacitor/browser'
 import { isOpenable } from '@/utils/barcode.mapper'
-import { resolveIconForValueType } from '@/utils/icon.resolver'
 import { formatDateTime } from '@/utils/date.formatter'
-import { generateQrDataUrl } from '@/services/qrcode.service'
 import { copyToClipboard } from '@/services/sharing.service'
 import { useBarcodeActions } from '@/composables/useBarcodeActions'
 
@@ -188,18 +174,8 @@ const props = defineProps({
 
 const { share, copy, open, confirmDelete } = useBarcodeActions()
 
-const qrImageUrl = ref('')
 const canBeOpened = computed(() => isOpenable(props.barcode.valueType))
-const typeIcon = computed(() => resolveIconForValueType(props.barcode.valueType))
 const scannedAtLabel = computed(() => formatDateTime(props.barcode.scannedAt))
-
-onMounted(async () => {
-  try {
-    qrImageUrl.value = await generateQrDataUrl(props.barcode.displayValue)
-  } catch (error) {
-    console.error('Fehler bei QR-Code-Generierung:', error)
-  }
-})
 
 /**
  * Schließt das Modal.
@@ -262,36 +238,6 @@ async function deleteBarcode() {
 </script>
 
 <style scoped>
-.detail-header {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 1.5rem 1rem 0.5rem;
-  text-align: center;
-}
-
-.barcode-image {
-  width: 200px;
-  height: 200px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  margin-bottom: 1rem;
-  background: #ffffff;
-}
-
-.qr-spinner {
-  width: 200px;
-  height: 200px;
-  margin-bottom: 1rem;
-}
-
-.detail-value {
-  font-size: 1.1rem;
-  font-weight: 600;
-  word-break: break-all;
-  margin: 0;
-}
-
 .raw-value {
   word-break: break-all;
   font-size: 0.85rem;
@@ -304,3 +250,4 @@ async function deleteBarcode() {
   gap: 0.5rem;
 }
 </style>
+

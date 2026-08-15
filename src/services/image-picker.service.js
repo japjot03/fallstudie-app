@@ -1,8 +1,8 @@
-import { Camera, MediaTypeSelection } from '@capacitor/camera'
+import { FilePicker } from '@capawesome/capacitor-file-picker'
 import { Capacitor } from '@capacitor/core'
 
 /**
- * Auswahl eines Bildes aus der Galerie.
+ * Auswahl eines Bildes aus der Galerie über den File Picker.
  *
  * Der MLKit-Scanner braucht je nach Plattform eine andere Bildquelle:
  * nativ einen Dateipfad, im Browser einen Blob. Dieser Service kapselt
@@ -15,25 +15,28 @@ import { Capacitor } from '@capacitor/core'
  */
 
 /**
- * Öffnet die Galerie und liefert das gewählte Bild als Scanner-Quelle.
+ * Öffnet den File Picker und liefert das gewählte Bild als Scanner-Quelle.
  * @returns {Promise<ImageSource|null>} null, wenn nichts ausgewählt wurde
  */
 export async function pickImageFromGallery() {
-  const { results } = await Camera.chooseFromGallery({
-    mediaType: MediaTypeSelection.Photo,
-    allowMultipleSelection: false
+  const result = await FilePicker.pickImages({
+    multiple: false,
+    readData: false
   })
 
-  const [selected] = results || []
+  const [selected] = result.files || []
   if (!selected) return null
 
-  // Nativ liefert der Picker eine Datei-URI, die MLKit direkt lesen kann.
+  // Nativ liefert der Picker einen Dateipfad, den MLKit direkt lesen kann.
   if (Capacitor.isNativePlatform()) {
-    return selected.uri ? { path: selected.uri } : null
+    return selected.path ? { path: selected.path } : null
   }
 
-  // Im Browser gibt es nur einen webPath – daraus holen wir den Blob.
-  if (!selected.webPath) return null
-  const response = await fetch(selected.webPath)
-  return { blob: await response.blob() }
+  // Im Browser gibt es einen Blob.
+  if (selected.blob) {
+    return { blob: selected.blob }
+  }
+
+  return null
 }
+
