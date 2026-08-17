@@ -1,13 +1,14 @@
 import { BarcodeScanner } from '@capacitor-mlkit/barcode-scanning'
 
 export const PermissionStatus = { GRANTED: 'granted', DENIED: 'denied' }
+const isGranted = (permission) => permission === 'granted' || permission === 'limited'
 
 export const ensureCameraPermission = async () => {
   const { camera } = await BarcodeScanner.checkPermissions()
-  if (camera === 'granted') return PermissionStatus.GRANTED
+  if (isGranted(camera)) return PermissionStatus.GRANTED
   if (camera === 'denied') return PermissionStatus.DENIED
   const { camera: req } = await BarcodeScanner.requestPermissions()
-  return req === 'granted' ? PermissionStatus.GRANTED : PermissionStatus.DENIED
+  return isGranted(req) ? PermissionStatus.GRANTED : PermissionStatus.DENIED
 }
 
 export const openAppSettings = () => BarcodeScanner.openSettings()

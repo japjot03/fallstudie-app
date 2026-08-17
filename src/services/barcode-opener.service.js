@@ -1,13 +1,21 @@
 import { Browser } from '@capacitor/browser'
-import { isOpenable } from '@/utils/barcode.mapper'
+import { isOpenable, normalizeGeoPoint } from '@/utils/barcode.mapper'
 
-const SCHEMES = { PHONE: 'tel', EMAIL: 'mailto', SMS: 'sms', GEO: 'geo' }
+const SCHEMES = { PHONE: 'tel', EMAIL: 'mailto', SMS: 'sms' }
 const STRIP_WS = ['PHONE', 'SMS']
 
-export const openBarcode = async ({ valueType, displayValue }) => {
+export const openBarcode = async ({ valueType, displayValue, rawValue, geoPoint }) => {
   if (!isOpenable(valueType)) return false
   if (valueType === 'URL') {
     await Browser.open({ url: displayValue })
+    return true
+  }
+  if (valueType === 'GEO') {
+    const point = normalizeGeoPoint(geoPoint, rawValue || displayValue)
+    if (!point) return false
+
+    const coordinates = `${point.latitude},${point.longitude}`
+    window.open(`geo:${coordinates}?q=${coordinates}`, '_system')
     return true
   }
   const scheme = SCHEMES[valueType]

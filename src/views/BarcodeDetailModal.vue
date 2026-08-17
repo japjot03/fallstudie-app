@@ -99,14 +99,14 @@
         <ion-item>
           <ion-label>
             <p>Breitengrad</p>
-            <h2>{{ barcode.geoPoint.lat }}</h2>
+            <h2>{{ barcode.geoPoint.latitude }}</h2>
           </ion-label>
         </ion-item>
 
         <ion-item>
           <ion-label>
             <p>Längengrad</p>
-            <h2>{{ barcode.geoPoint.lng }}</h2>
+            <h2>{{ barcode.geoPoint.longitude }}</h2>
           </ion-label>
         </ion-item>
 
@@ -183,8 +183,9 @@ const copyWifiPassword = async () => {
 }
 
 const openMap = async () => {
-  const { lat, lng } = props.barcode.geoPoint
-  await Browser.open({ url: `http://maps.google.com/?q=${lat},${lng}` })
+  const { latitude, longitude } = props.barcode.geoPoint
+  const query = encodeURIComponent(`${latitude},${longitude}`)
+  await Browser.open({ url: `https://www.google.com/maps/search/?api=1&query=${query}` })
 }
 
 const deleteBarcode = async () => {
@@ -206,4 +207,3 @@ const deleteBarcode = async () => {
   gap: 0.5rem;
 }
 </style>
-
